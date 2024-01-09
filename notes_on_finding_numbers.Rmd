@@ -1,0 +1,29 @@
+---
+title: "Notes on where to find addresses"
+author: "Damian Mikhail"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Options for finding numbers and names from addresses
+
+## Trestle
+API Documentation URL: https://trestle-api.redoc.ly/#operation/getCNAM
+
+**Pros:**
+* Contains an API with a "Reverse Address" search which provides current residents 
+and phone numbers among others
+* Has a free trial which could possibly be used to get all info at once
+
+**Cons**
+* Costs $0.07 per query (per address) outside of free trial
+
+
+## 411Canada
+
+**Pros**
+* Completely free
+* Well respected institution, likely more accurate numbers
+
+**Cons**
+* Would need to be web scraped (Slow and possibly unreliable)

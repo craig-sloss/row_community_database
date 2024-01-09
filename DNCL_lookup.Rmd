@@ -1,0 +1,63 @@
+---
+title: "DNCL Lookup"
+author: "Damian Mikhail"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Setup
+
+## Requirements before starting
+
+* Register with Dun & Bradstreet as an official organization
+* Visit the registration page for telemarketers (https://www.lnnte-dncl.gc.ca/en/Organization/Register-your-organization))
+* When registering, the website asks for the “Telemarketer Identity”. Select “Other”.
+  * Registration info at https://www.dnb.com/duns/get-a-duns.html, takes up to 30 days
+  or 8 if paid
+* Email support@lnnte-dncl.gc.ca and provide your RAN, Account Manager Name, and Account Manager Email. In the email write that you are requesting access to the API.
+
+
+```{r setup}
+library(httr)
+library(jsonlite)
+```
+
+
+Inserting info that will be provided through DNCL registration into the 
+corresponding variables
+
+```{r client credentials}
+client_credentials =
+client_id = 
+client_secret =
+```
+
+Get access token to access Canada's National DNCL
+
+```{r authentication}
+res = GET("https://public-api.lnnte-dncl.gc.ca/OAuth/BearerToken",
+          query =list(grant_type=client_credentials, client_id=client_id, client_secret=client_secret))
+
+data = fromJSON(rawToChar(res$content)) # Convert to readable form
+
+accesstoken = data$access_token
+```
+
+
+```{r check number}
+number = 1234567890 # Example number to check
+
+res = POST("https://public-api.lnnte-dncl.gc.ca/v1/Consumer/Check",
+           config = add_headers('Authorization' = paste("Bearer", accesstoken, sep = " ")),
+           body = list(Phone = number),
+           encode = "json")
+
+data = fromJSON(rawToChar(res$content)) # Convert to readable form
+
+isRegistered = data$Active # Check if the phone is currently registered with DNCL
+
+
+```
+
+
+
