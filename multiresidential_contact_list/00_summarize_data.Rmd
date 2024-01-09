@@ -36,3 +36,8 @@ multiresidential_summary_ward_10 = multiresidential_summary %>%
 multiresidential_summary_ward_10 %>% head(25)
 ```
 
+```{r}
+saveRDS(multiresidential_summary, "./multiresidential_summary.rds")
+saveRDS(multiresidential_summary_ward_10, "./multiresidential_summary_ward_10.rds")
+```
+
