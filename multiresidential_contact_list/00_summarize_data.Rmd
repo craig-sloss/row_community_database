@@ -1,0 +1,38 @@
+---
+title: "00_summarize_data.Rmd"
+output: html_document
+date: "2024-01-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Import and summarize data
+
+```{r}
+original_data = read_csv("./data/addresses_all.csv")
+original_data %>% head()
+```
+
+Use averages of X and Y. Can't include these in the grouping because small differences result in buildings not being grouped. 
+
+```{r}
+multiresidential_summary = original_data %>%
+  filter(UNIT_TYPE %in% c("UNIT", "VERTICAL UNIT", "HORIZONTAL UNIT")) %>% 
+  group_by(STREET, CIVIC_NO, WARD, POLL) %>%
+  summarise(number = n(), 
+            horizontal_units = sum(UNIT_TYPE == "HORIZONTAL UNIT"),
+            vertical_units = sum(UNIT_TYPE == "VERTICAL UNIT"),
+            X = mean(X), 
+            Y = mean(Y)) %>%
+  arrange(-number)
+```
+
+```{r}
+multiresidential_summary_ward_10 = multiresidential_summary %>%
+  filter(WARD == 10)
+multiresidential_summary_ward_10 %>% head(25)
+```
+
