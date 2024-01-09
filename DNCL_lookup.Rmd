@@ -12,6 +12,7 @@ output: html_document
 * Register with Dun & Bradstreet as an official organization
 * Visit the registration page for telemarketers (https://www.lnnte-dncl.gc.ca/en/Organization/Register-your-organization))
 * When registering, the website asks for the “Telemarketer Identity”. Select “Other”.
+  * Registration info at https://www.dnb.com/duns/get-a-duns.html
 * Email support@lnnte-dncl.gc.ca and provide your RAN, Account Manager Name, and Account Manager Email. In the email write that you are requesting access to the API.
 
 
