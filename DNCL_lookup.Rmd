@@ -12,6 +12,8 @@ output: html_document
 * Register with Dun & Bradstreet as an official organization
 * Visit the registration page for telemarketers (https://www.lnnte-dncl.gc.ca/en/Organization/Register-your-organization))
 * When registering, the website asks for the “Telemarketer Identity”. Select “Other”.
+  * Registration info at https://www.dnb.com/duns/get-a-duns.html, takes up to 30 days
+  or 8 if paid
 * Email support@lnnte-dncl.gc.ca and provide your RAN, Account Manager Name, and Account Manager Email. In the email write that you are requesting access to the API.
 
 
@@ -19,6 +21,10 @@ output: html_document
 library(httr)
 library(jsonlite)
 ```
+
+
+Inserting info that will be provided through DNCL registration into the 
+corresponding variables
 
 ```{r client credentials}
 client_credentials =
