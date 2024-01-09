@@ -16,7 +16,7 @@ and phone numbers among others
 * Has a free trial which could possibly be used to get all info at once
 
 **Cons**
-* Costs $0.07 per queury (per address) outside of free trial
+* Costs $0.07 per query (per address) outside of free trial
 
 
 ## 411Canada
