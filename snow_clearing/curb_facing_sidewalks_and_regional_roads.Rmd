@@ -1,0 +1,80 @@
+---
+title: "Comparison of Privately-Cleared Sidewalks and Census Indicators of Pedestrian Activity in Waterloo, ON"
+author: "Craig A. Sloss"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(sf)
+library(leaflet)
+library(ggplot2)
+library(RColorBrewer)
+#census = readRDS("./snow_clearing_dataset.rds")
+#percentage_walk_dataset = census %>%
+#  filter(CHARACTERISTIC_NAME %in% c("Walked", "Public transit")) %>%
+#  group_by(GEO_NAME) %>%
+#  summarise(walk_or_transit = sum(C10_RATE_TOTAL, na.rm = TRUE))
+#waterloo_map = read_sf(dsn = "./waterloo", layer = "waterloo_DA") %>% 
+#  st_transform("+proj=longlat +datum=WGS84") %>%
+#  left_join(percentage_walk_dataset %>% rename(DAUID = GEO_NAME)) %>%
+#  left_join(percentage_school_age_dataset %>% rename(DAUID = GEO_NAME)) %>%
+#  subset(!is.na(walk_or_transit))
+sidewalk_map = read_sf(dsn = "./data/Sidewalks-shp", layer = "Sidewalks") %>% 
+  st_transform("+proj=longlat +datum=WGS84")
+```
+
+#### Responsibility for Sidewalk Snow Clearing
+```{r}
+pal <- colorFactor(palette = "Accent", domain = sidewalk_map$BLVD_TYPE)
+leaflet(sidewalk_map) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(color = ~pal(BLVD_TYPE), opacity = 1, weight = 2) %>%
+  addLegend(pal = pal, values = ~BLVD_TYPE, title = "")
+```
+
+```{r}
+pal <- colorFactor(palette = "Accent", domain = sidewalk_map$CLEARED_BY)
+leaflet(sidewalk_map) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(color = ~pal(CLEARED_BY), opacity = 1, weight = 2) %>%
+  addLegend(pal = pal, values = ~CLEARED_BY, title = "")
+```
+
+TODO:
+* Derive indicator for: not curb-facing, curb-facing private, curb-facing city
+* Overlay census data on active transit users
+
+# Regional Roads
+
+```{r}
+road_map = read_sf(dsn = "./data/Roads", layer = "Roads") %>% 
+  st_transform("+proj=longlat +datum=WGS84")
+```
+
+```{r}
+pal <- colorFactor(palette = "Accent", domain = road_map$MANAGED_BY)
+leaflet(road_map) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(color = ~pal(MANAGED_BY), opacity = 1, weight = 2) %>%
+  addLegend(pal = pal, values = ~MANAGED_BY, title = "")
+```
+
+TODO:
+- Highlight regional roads vs others
+- Overlay what the city currently clears
+- Overlay pedestrian / cyclist activity
+
+#### Data sources 
+
+* Statistics Canada, 2021 Census of Population (https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/prof/details/download-telecharger.cfm?Lang=E)
+
+* Statistics Canada, 2021 Census Boundaries (https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index2021-eng.cfm?Year=21)
+
+* City of Waterloo Open Data, 2019 Sidewalks (https://data.waterloo.ca/datasets/City-of-Waterloo::sidewalks/about)
+
+* City of Waterloo Open Data, 2018 Schools (https://data.waterloo.ca/datasets/City-of-Waterloo::schools/about)
