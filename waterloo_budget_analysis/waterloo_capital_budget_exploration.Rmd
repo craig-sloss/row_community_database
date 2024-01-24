@@ -1,0 +1,69 @@
+---
+title: "City of Waterloo Capital Budget Exploration"
+author: "Craig A. Sloss"
+date: "2024-01-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+
+# Import Data
+
+```{r}
+capital_data = read_excel("./data/waterloo_capital_budget_2024-2026.xlsx") %>%
+  filter(!is.na(WARD)) %>%
+  mutate(WARD = ifelse(grepl("Ward 2", WARD), "Ward 2 - Northwest", WARD))
+```
+
+```{r}
+capital_data %>% 
+  group_by(WARD) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026)
+```
+
+```{r}
+capital_data %>% 
+  group_by(`Council Reporting Criteria`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026)
+```
+
+```{r}
+capital_data %>% 
+  group_by(`Project Type`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026)
+```
+
+```{r}
+capital_data %>% 
+  group_by(Dept) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026)
+```
+
+
+```{r}
+capital_data %>% 
+  group_by(`Service Delivery Division`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026) %>%
+  arrange(-total)
+```
+
+```{r}
+capital_data %>% 
+  group_by(`Implementation Division`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026) %>%
+  arrange(-total)
+```
+
+
+
+
