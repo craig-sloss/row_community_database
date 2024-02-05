@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
+options(scipen = 999)
 ```
 
 # Import Data
@@ -64,6 +65,68 @@ capital_data %>%
   arrange(-total)
 ```
 
+```{r}
+capital_data %>% 
+  group_by(`Strategic Priority`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026) %>%
+  arrange(-total)
+```
 
+```{r}
+capital_data %>% 
+  group_by(`Theme`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026) %>%
+  arrange(-total)
+```
 
+```{r}
+capital_data %>% 
+  group_by(`Source of Financing`) %>%
+  summarize(total_2024 = sum(`2024`), total_2025 = sum(`2025`), total_2026 = sum(`2026`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026) %>%
+  arrange(-total)
+```
+
+The list of "tax-based reserves" was obtained from page 27 of the staff-tabled capital budget: https://www.waterloo.ca/en/government/resources/Documents/Finance/Budget-2024-2026/Staff-Tabled-2024-2026-Capital-Budget-and-2027-2033-Capital-Forecast.pdf
+
+Limiting the data to these sources removes items that aren't funded through taxes, but are paid through from other sources (such as development charges).
+
+```{r}
+tax_based_reserves = c("CIRRF", "CIRRFINFRA", "CRF", "CARF", "ECDEV", "EMPDV", "ER", "ER-Garage", "HER", "LXP", "AH", "ART")
+tax_based_capital_budget = capital_data %>%
+  filter(`Source of Financing` %in% tax_based_reserves)
+tax_based_capital_summary = tax_based_capital_budget %>% 
+  group_by(`Theme`) %>%
+  summarize(total_2024 = sum(`2024`), 
+            total_2025 = sum(`2025`), 
+            total_2026 = sum(`2026`),
+            total_2027 = sum(`2027`),
+            total_2028 = sum(`2028`),
+            total_2029 = sum(`2029`),
+            total_2030 = sum(`2030`),
+            total_2031 = sum(`2031`),
+            total_2032 = sum(`2032`),
+            total_2033 = sum(`2033`)) %>%
+  mutate(total = total_2024 + total_2025 + total_2026) %>%
+  arrange(-total) %>%
+  select(`Theme`, total_2024, total_2025, total_2026, total)
+tax_based_capital_summary
+```
+
+```{r}
+tax_based_capital_summary_plotting_data = 
+  tax_based_capital_summary %>%
+  head(8) %>%
+  rename(`2024` = total_2024, `2025` = total_2025, `2026` = total_2026) %>%
+  pivot_longer(cols = c(`2024`, `2025`, `2026`)) %>%
+  rename(Year = name)
+ggplot(data = tax_based_capital_summary_plotting_data, aes(y = reorder(`Theme`, total), x = value / 1000000, fill = Year)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "City of Waterloo Capital Budget Summary 2024-2026",
+       subtitle = "Tax-based reserves only, top 8 categories by total expenditure",
+       x = "Budgeted Amount ($M)",
+       y = "Type of Expenditure")
+```
 
