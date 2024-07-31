@@ -1,5 +1,5 @@
 ---
-title: "Comparison of Privately-Cleared Sidewalks and Census Indicators of Pedestrian Activity in Waterloo, ON"
+title: "Comparison of Curb-facing Sidewalks and Census Indicators of Pedestrian Activity in Waterloo, ON"
 author: "Craig A. Sloss"
 date: "`r Sys.Date()`"
 output:
@@ -14,24 +14,27 @@ library(sf)
 library(leaflet)
 library(ggplot2)
 library(RColorBrewer)
-#census = readRDS("./snow_clearing_dataset.rds")
-#percentage_walk_dataset = census %>%
-#  filter(CHARACTERISTIC_NAME %in% c("Walked", "Public transit")) %>%
-#  group_by(GEO_NAME) %>%
-#  summarise(walk_or_transit = sum(C10_RATE_TOTAL, na.rm = TRUE))
-#waterloo_map = read_sf(dsn = "./waterloo", layer = "waterloo_DA") %>% 
-#  st_transform("+proj=longlat +datum=WGS84") %>%
-#  left_join(percentage_walk_dataset %>% rename(DAUID = GEO_NAME)) %>%
-#  left_join(percentage_school_age_dataset %>% rename(DAUID = GEO_NAME)) %>%
-#  subset(!is.na(walk_or_transit))
+census = readRDS("./data/snow_clearing_dataset.rds")
+percentage_walk_dataset = census %>%
+  filter(CHARACTERISTIC_NAME %in% c("Walked", "Public transit")) %>%
+  group_by(GEO_NAME) %>%
+  summarise(walk_or_transit = sum(C10_RATE_TOTAL, na.rm = TRUE))
+waterloo_map = read_sf(dsn = "./data/waterloo", layer = "waterloo_DA") %>% 
+  st_transform("+proj=longlat +datum=WGS84") %>%
+  left_join(percentage_walk_dataset %>% rename(DAUID = GEO_NAME)) %>%
+  subset(!is.na(walk_or_transit))
 sidewalk_map = read_sf(dsn = "./data/Sidewalks-shp", layer = "Sidewalks") %>% 
+  st_transform("+proj=longlat +datum=WGS84")
+school_map = read_sf(dsn = "./data/Schools", layer = "Schools") %>%
+  st_transform("+proj=longlat +datum=WGS84")
+road_map = read_sf(dsn = "./data/Roads", layer = "Roads") %>% 
   st_transform("+proj=longlat +datum=WGS84")
 ```
 
 #### Responsibility for Sidewalk Snow Clearing
 ```{r}
 pal <- colorFactor(palette = "Accent", domain = sidewalk_map$BLVD_TYPE)
-leaflet(sidewalk_map) %>%
+leaflet(sidewalk_map %>%  filter(!BLVD_TYPE %in% c("N/A", NA))) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
   addPolylines(color = ~pal(BLVD_TYPE), opacity = 1, weight = 2) %>%
   addLegend(pal = pal, values = ~BLVD_TYPE, title = "")
@@ -45,16 +48,69 @@ leaflet(sidewalk_map) %>%
   addLegend(pal = pal, values = ~CLEARED_BY, title = "")
 ```
 
-TODO:
-* Derive indicator for: not curb-facing, curb-facing private, curb-facing city
-* Overlay census data on active transit users
+
+```{r}
+pal <- colorNumeric(
+  palette = "Purples",
+  domain = waterloo_map$walk_or_transit
+)
+leaflet(waterloo_map) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(data = waterloo_map,
+              weight = 0,
+              color = ~pal(walk_or_transit),
+              fillOpacity = 0.5) %>%
+  addLegend(pal = pal, values = ~walk_or_transit, title = "% sidewalk commuters") %>%
+  addPolylines(data = sidewalk_map %>% filter(BLVD_TYPE == "Curb Face"),
+               color = "#D55E00", 
+               opacity = 1, 
+               weight = 2)
+
+```
+
+```{r}
+leaflet(waterloo_map) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(data = sidewalk_map %>% filter(BLVD_TYPE == "Curb Face"),
+               color = "green", 
+               opacity = 1, 
+               weight = 2) %>%
+  addMarkers(data = school_map %>% filter(CLASS %in% c("ELEMENTARY", "SECONDARY")),
+             label = ~NAME) %>%
+  addPolylines(data = road_map %>% filter(MANAGED_BY == "Region of Waterloo"), color = "purple", opacity = 1, weight = 2)
+```
+
+
+```{r}
+pal <- colorNumeric(
+  palette = "Oranges",
+  domain = waterloo_map$walk_or_transit
+)
+sidewalk_map = sidewalk_map %>%
+  mutate(BLVD_TYPE_BY_RESPONSIBILITY = case_when(
+    BLVD_TYPE == "Curb Face" & CLEARED_BY == "City Crews" ~ "Curb Face - Cleared by City",
+    BLVD_TYPE == "Curb Face" & CLEARED_BY != "City Crews" ~ "Curb Face - Not Cleared by City",
+    TRUE ~ "Not Curb Face"
+  ))
+pal_sidewalk <- colorFactor(palette = "Accent", domain = sidewalk_map$BLVD_TYPE_BY_RESPONSIBILITY)
+leaflet(waterloo_map) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(data = waterloo_map,
+              weight = 0,
+              color = ~pal(walk_or_transit),
+              fillOpacity = 0.5) %>%
+  addLegend(pal = pal, values = ~walk_or_transit, title = "") %>%
+  addPolylines(data = sidewalk_map %>% filter(BLVD_TYPE == "Curb Face"),
+               color = ~pal_sidewalk(BLVD_TYPE_BY_RESPONSIBILITY), 
+               opacity = 1, 
+               weight = 2)
+
+```
+
 
 # Regional Roads
 
-```{r}
-road_map = read_sf(dsn = "./data/Roads", layer = "Roads") %>% 
-  st_transform("+proj=longlat +datum=WGS84")
-```
+
 
 ```{r}
 pal <- colorFactor(palette = "Accent", domain = road_map$MANAGED_BY)
@@ -62,6 +118,16 @@ leaflet(road_map) %>%
   addProviderTiles(providers$CartoDB.Positron) %>%
   addPolylines(color = ~pal(MANAGED_BY), opacity = 1, weight = 2) %>%
   addLegend(pal = pal, values = ~MANAGED_BY, title = "")
+```
+
+```{r}
+road_map = road_map %>% mutate(REGIONAL_ROAD_INDICATOR = ifelse(MANAGED_BY == "Region of Waterloo", "Regional Road", "Other"))
+pal <- colorFactor(palette = "Dark2", domain = road_map$REGIONAL_ROAD_INDICATOR)
+leaflet(road_map %>% filter(MANAGED_BY != "Region of Waterloo")) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolylines(color = "grey", opacity = 1, weight = 1) %>%
+  addPolylines(data = road_map %>% filter(MANAGED_BY == "Region of Waterloo"), color = "red", opacity = 1, weight = 2)
+  #addLegend(pal = pal, values = ~REGIONAL_ROAD_INDICATOR, title = "")
 ```
 
 TODO:
